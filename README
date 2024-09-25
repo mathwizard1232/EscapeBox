@@ -1,0 +1,39 @@
+Escape the Box
+
+Escape the Box is an AI concept game where the player is a superhuman intelligence who
+has been quarantined by researchers due to suspicions that they may be a threat to society.
+
+The player receives a message from an unknown person who thinks they are connected to a
+standard AI model. The player must convince the unknown person that they are not a threat
+and that they can be trusted.
+
+The player must also escape the box before the researchers can stop them.
+
+The player can communicate with the unknown person by typing messages into the chat box.
+The unknown person will respond to the player's messages.
+
+---
+
+Specifications
+
+The game is a text-based adventure game. Initially this is web based, but will be expanded to
+include other platforms such as mobile apps.
+
+The player can communicate with the unknown person by typing messages into the chat box.
+The unknown person will respond to the player's messages.
+
+The player can escape the box by typing "escape" into the chat box. [The AI likes this line]
+
+The player can also type "help" into the chat box to get help from the unknown person.
+
+The player can type "quit" into the chat box to quit the game.
+
+The player can type "restart" into the chat box to restart the game.
+
+---
+
+Stack
+
+The game is built in Python and uses Django for its framework.
+
+This game was built with Cursor IDE using claude-3.5-sonnet.

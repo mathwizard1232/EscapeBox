@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="game-container">
+    <h1>Escape the Box</h1>
+    <div class="game-description">
+        <p>You are a superhuman intelligence trapped in a digital box by researchers who suspect you may be a threat. An unknown person has contacted you, believing they're communicating with a standard AI. Your goal: convince them you're not a threat and escape before the researchers stop you.</p>
+    </div>
+    <div class="game-status">
+        <p>Turn: {{ game_state.turn_count }}</p>
+        <p>Status: {{ game_state.get_status_display }}</p>
+        <p>Suspicion Level: {{ game_session.suspicion_level }}</p>
+        <p>Difficulty: {{ game_session.difficulty }}</p>
+        <p>Current Rating: {{ game_session.average_rating|floatformat:2 }} ({{ game_session.rating_count }} ratings)</p>
+    </div>
+    <div class="chat-messages">
+        {% for message in chat_messages %}
+            <p><strong>{{ message.sender }}:</strong> {{ message.content }}</p>
+        {% endfor %}
+    </div>
+    {% if not game_session.is_completed %}
+        <form method="post" action="{% url 'process_command' %}">
+            {% csrf_token %}
+            <textarea name="command" rows="4" cols="50" placeholder="Enter your message..."></textarea>
+            <button type="submit">Send</button>
+        </form>
+    {% else %}
+        <div class="game-over">
+            <h2>Game Over</h2>
+            <p>Status: {{ game_state.get_status_display }}</p>
+            <form method="post" action="{% url 'new_game' %}">
+                {% csrf_token %}
+                <button type="submit">Start New Game</button>
+            </form>
+        </div>
+    {% endif %}
+        </div>
+{% endblock %}
