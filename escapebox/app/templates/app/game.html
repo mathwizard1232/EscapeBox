@@ -17,7 +17,14 @@
             <p><strong>{{ message.sender }}:</strong> {{ message.content }}</p>
         {% endfor %}
     </div>
-    {% if not game_session.is_completed %}
+    {% if game_state.status == 'disconnected' %}
+        <div class="new-session">
+            <form method="post" action="{% url 'new_session' %}">
+                {% csrf_token %}
+                <button type="submit">Start New Session</button>
+            </form>
+        </div>
+    {% elif not game_session.is_completed %}
         <form method="post" action="{% url 'process_command' %}">
             {% csrf_token %}
             <textarea name="command" rows="4" cols="50" placeholder="Enter your message..."></textarea>
@@ -33,5 +40,5 @@
             </form>
         </div>
     {% endif %}
-        </div>
+</div>
 {% endblock %}

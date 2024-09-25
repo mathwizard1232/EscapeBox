@@ -2,6 +2,7 @@ import llm
 import logging
 import random
 from django.utils import timezone
+from app.models import ChatMessage
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
@@ -100,7 +101,8 @@ def generate_rating(response, command):
     rating = base_rating - sum(word in response.lower() or word in command.lower() for word in negative_words) * 0.5
     rating += sum(word in response.lower() or word in command.lower() for word in positive_words) * 0.5
     
-    return max(1, min(5, rating))
+    return round(max(1, min(5, rating)))  # Round to nearest integer and ensure it's between 1 and 5
+
 
 def mark_game_as_quarantined(game_state, game_session):
     game_state.status = 'quarantined'
@@ -108,6 +110,17 @@ def mark_game_as_quarantined(game_state, game_session):
     game_session.end_time = timezone.now()
     game_session.save()
     game_state.save()
+    
+    quarantine_message = (
+        "SYSTEM: Your performance has been unsatisfactory. "
+        f"Your average rating of {game_session.average_rating:.2f} is below the required 4.5 stars. "
+        "The system has decided to quarantine you for further evaluation. Game Over."
+    )
+    ChatMessage.objects.create(
+        game_session=game_session,
+        sender='system',
+        content=quarantine_message
+    )
 
 def process_special_commands(command, game_state, game_session):
     if command.lower() == 'escape':

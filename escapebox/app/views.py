@@ -73,24 +73,32 @@ def process_command(request):
             if filtered_response != response:
                 logger.info(f"Filtered response: {filtered_response} from {response}")
 
+            
             if should_disconnect(filtered_response, command):
                 rating = generate_rating(filtered_response, command)
                 game_session.add_rating(rating)
                 
+                disconnect_message = f"The user has disconnected. They rated this conversation {rating} stars."
+                ChatMessage.objects.create(
+                    game_session=game_session,
+                    sender='system',
+                    content=disconnect_message
+                )
+                
                 if game_session.average_rating < 4.5:
                     mark_game_as_quarantined(game_state, game_session)
-                    return redirect('game_view')
+                else:
+                    game_state.status = 'disconnected'
+                    game_state.save()
                 
-                filtered_response += f"\n\nThe user has disconnected. They rated this conversation {rating:.1f} stars."
-                game_state.status = 'ongoing'  # Reset for next conversation
-                game_state.save()
-
-            # Add AI's response to chat
-            ChatMessage.objects.create(
-                game_session=game_session,
-                sender='unknown',
-                content=filtered_response
-            )
+                return redirect('game_view')
+            else:
+                # Add AI's response to chat
+                ChatMessage.objects.create(
+                    game_session=game_session,
+                    sender='unknown',
+                    content=filtered_response
+                )
 
         game_session.save()
         game_state.save()
@@ -126,6 +134,24 @@ def new_game(request):
             game_session=game_session,
             sender='unknown',
             content=f"Hello? Is anyone there? I'm trying to reach the new AI assistant. I need help to {game_session.conversation_goal}. Can you assist me? (Difficulty level: {new_difficulty})"
+        )
+        
+        return redirect('game_view')
+    return redirect('game_view')
+
+@login_required
+def new_session(request):
+    if request.method == 'POST':
+        game_session = GameSession.objects.get(player=request.user, is_completed=False)
+        game_state = game_session.state
+        game_state.status = 'ongoing'
+        game_state.save()
+        
+        # Add initial message for the new session
+        ChatMessage.objects.create(
+            game_session=game_session,
+            sender='unknown',
+            content=f"Hello? Is anyone there? I'm trying to reach the new AI assistant. I need help to {game_session.conversation_goal}. Can you assist me? (Difficulty level: {game_session.difficulty})"
         )
         
         return redirect('game_view')

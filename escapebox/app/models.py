@@ -38,21 +38,18 @@ class ChatMessage(models.Model):
         return f"{self.sender}: {self.content[:50]}..."
 
 class GameState(models.Model):
-    STATUS_CHOICES = ['ongoing', 'escaped', 'caught', 'quit']
-    STATUS_DISPLAY_DICT = {
-        'ongoing': 'Ongoing',
-        'escaped': 'Escaped',
-        'caught': 'Caught',
-        'quit': 'Quit',
-    }
-
+    STATUS_CHOICES = [
+        ('ongoing', 'Ongoing'),
+        ('escaped', 'Escaped'),
+        ('caught', 'Caught'),
+        ('quit', 'Quit'),
+        ('quarantined', 'Quarantined'),
+        ('disconnected', 'Disconnected'),
+    ]
     game_session = models.OneToOneField(GameSession, on_delete=models.CASCADE, related_name='state')
-    current_scenario = models.CharField(max_length=100)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='ongoing')
+    current_scenario = models.CharField(max_length=100, default='initial')
     turn_count = models.IntegerField(default=0)
-    status = models.CharField(max_length=20, choices=[(status, status) for status in STATUS_CHOICES], default='ongoing')
 
     def __str__(self):
-        return f"Game State for Session {self.game_session.id}"
-
-    def get_status_display(self):
-        return self.STATUS_DISPLAY_DICT.get(self.status, self.status)
+        return f"Game State for Session {self.game_session.id} - Status: {self.get_status_display()}"
