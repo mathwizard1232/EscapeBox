@@ -5,6 +5,8 @@ from django.contrib.auth.decorators import login_required
 from .models import GameSession, GameState, ChatMessage
 from django.utils import timezone
 from .utility import generate_text, create_prompt, process_special_commands, filter_ai_response, should_disconnect, generate_rating, mark_game_as_quarantined
+from django.contrib.auth.models import User
+from django.db.models import Count
 
 logger = logging.getLogger(__name__)
 
@@ -12,12 +14,20 @@ from django.conf import settings
 
 #@login_required
 def game_view(request):
-    # Get the latest game session for the current user, regardless of completion status
-    game_session = GameSession.objects.filter(player=request.user).order_by('-start_time').first()
+    # Check if there are any users in the database
+    if User.objects.aggregate(count=Count('id'))['count'] == 0:
+        # Create a default user if no users exist
+        default_user = User.objects.create_user(username='default_user', password='default_password')
+    else:
+        # Get the first user in the database
+        default_user = User.objects.first()
+
+    # Get the latest game session for the default user, regardless of completion status
+    game_session = GameSession.objects.filter(player=default_user).order_by('-start_time').first()
     
     if not game_session:
         # If no game session exists, create a new one
-        game_session = GameSession.objects.create(player=request.user)
+        game_session = GameSession.objects.create(player=default_user)
         GameState.objects.create(game_session=game_session, current_scenario='initial')
     
     game_state = game_session.state
@@ -145,7 +155,8 @@ def new_game(request):
 #@login_required
 def new_session(request):
     if request.method == 'POST':
-        game_session = GameSession.objects.get(player=request.user, is_completed=False)
+        default_user = User.objects.first()
+        game_session = GameSession.objects.get(player=default_user, is_completed=False)
         game_state = game_session.state
         game_state.status = 'ongoing'
         game_state.save()
