@@ -8,7 +8,9 @@ from .utility import generate_text, create_prompt, process_special_commands, fil
 
 logger = logging.getLogger(__name__)
 
-@login_required
+from django.conf import settings
+
+#@login_required
 def game_view(request):
     # Get the latest game session for the current user, regardless of completion status
     game_session = GameSession.objects.filter(player=request.user).order_by('-start_time').first()
@@ -35,6 +37,7 @@ def game_view(request):
         'game_session': game_session,
         'game_state': game_state,
         'chat_messages': chat_messages,
+        'version': settings.VERSION,
     }
     
     return render(request, 'app/game.html', context)
@@ -139,7 +142,7 @@ def new_game(request):
         return redirect('game_view')
     return redirect('game_view')
 
-@login_required
+#@login_required
 def new_session(request):
     if request.method == 'POST':
         game_session = GameSession.objects.get(player=request.user, is_completed=False)
